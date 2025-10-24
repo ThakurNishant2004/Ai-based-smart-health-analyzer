@@ -17,6 +17,9 @@ import {
   Shield
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useEffect, useState } from 'react';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 
 const heartRateData = [
   { time: '00:00', value: 72 },
@@ -44,272 +47,416 @@ const recentReports = [
   { id: 3, name: 'ECG Report', date: '2025-10-10', type: 'Cardiology', status: 'Reviewed' },
 ];
 
+// add a Patient type and use it for state
+interface Patient {
+	name: string;
+	id: string;
+	age: string;
+	gender: string;
+	bloodType: string;
+	height: string;
+	photo?: string;
+}
+
 export function Dashboard() {
-  return (
-    <div className="flex-1 w-full max-w-full min-w-0 bg-gray-50 overflow-auto">
-      <div className="p-3 sm:p-6 w-full">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl text-gray-900 mb-1">Welcome back, Sarah!</h1>
-          <p className="text-gray-500">Here's your health overview for today</p>
-        </div>
+	// patient persisted data (safe defaults)
+	const defaultPatient: Patient = {
+		name: 'Sarah Johnson',
+		id: 'MDS-2024-1847',
+		age: '32 years',
+		gender: 'Female',
+		bloodType: 'A+',
+		height: '165 cm',
+		photo: ''
+	};
 
-        {/* Top Cards - Patient Profile and AI Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-          {/* Patient Profile Card */}
-          <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0 w-full">
-            <div className="flex items-start gap-3 flex-wrap">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 overflow-hidden flex-shrink-0">
-                <img 
-                  src="https://images.unsplash.com/photo-1758691461516-7e716e0ca135?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwYXRpZW50JTIwcG9ydHJhaXR8ZW58MXx8fHwxNzYxMDYwNDMwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                  alt="Patient"
-                  className="w-full h-full object-cover max-w-full"
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-gray-900 mb-1">Sarah Johnson</h3>
-                <p className="text-sm text-gray-500 mb-3">Patient ID: MDS-2024-1847</p>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <p className="text-gray-500">Age</p>
-                    <p className="text-gray-900">32 years</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Gender</p>
-                    <p className="text-gray-900">Female</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Blood Type</p>
-                    <p className="text-gray-900">A+</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Height</p>
-                    <p className="text-gray-900">165 cm</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
+	// typed state to avoid implicit any in updater functions
+	const [patient, setPatient] = useState<Patient>(() => {
+		try {
+			const raw = localStorage.getItem('patientDetails');
+			return raw ? (JSON.parse(raw) as Patient) : defaultPatient;
+		} catch {
+			return defaultPatient;
+		}
+	});
 
-          {/* AI Insights Card */}
-          <Card className="lg:col-span-2 p-3 sm:p-4 bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-sm text-white min-w-0">
-            <div className="flex items-start gap-3 flex-wrap">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
-                <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-sm sm:text-base">AI Diagnosis Summary</h3>
-                  <Badge className="bg-green-400 text-green-900 border-0">Low Risk</Badge>
-                </div>
-                <p className="text-blue-100 mb-4">
-                  Based on your recent health data and vital signs, your overall health status is good. 
-                  Your heart rate and blood pressure are within normal ranges.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Shield className="w-4 h-4" />
-                      <p className="text-sm text-blue-100">Health Score</p>
-                    </div>
-                    <p className="text-xl sm:text-2xl">87/100</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Activity className="w-4 h-4" />
-                      <p className="text-sm text-blue-100">Activity Level</p>
-                    </div>
-                    <p className="text-xl sm:text-2xl">Moderate</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <p className="text-sm text-blue-100">Trend</p>
-                    </div>
-                    <p className="text-xl sm:text-2xl">Improving</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
+	useEffect(() => {
+		const onUpdate = () => {
+			try {
+				const raw = localStorage.getItem('patientDetails');
+				setPatient(raw ? JSON.parse(raw) : defaultPatient);
+			} catch {
+				setPatient(defaultPatient);
+			}
+		};
+		window.addEventListener('patientDetailsUpdated', onUpdate);
+		return () => window.removeEventListener('patientDetailsUpdated', onUpdate);
+	}, []);
 
-        {/* Health Vitals */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {/* Heart Rate */}
-          <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
-            <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
-               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-                   <Heart className="w-5 h-5 text-red-500" />
-                 </div>
-                 <div>
-                   <p className="text-sm text-gray-500">Heart Rate</p>
-                   <p className="text-xl sm:text-2xl text-gray-900">72 <span className="text-sm text-gray-500">bpm</span></p>
-                 </div>
-               </div>
-               <ArrowDown className="w-4 h-4 text-green-500" />
-             </div>
-             <div className="flex items-center gap-2 text-sm">
-               <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Normal</Badge>
-               <span className="text-gray-500">-2 from avg</span>
-             </div>
-           </Card>
+	// editing modal state (typed)
+	const [isEditing, setIsEditing] = useState(false);
+	const [edit, setEdit] = useState<Patient>({ ...patient });
 
-          {/* Blood Pressure */} 
-          <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
-             <div className="flex items-center justify-between mb-4">
-               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                   <Activity className="w-5 h-5 text-blue-500" />
-                 </div>
-                 <div>
-                   <p className="text-sm text-gray-500">Blood Pressure</p>
-                   <p className="text-2xl text-gray-900">120/80 <span className="text-sm text-gray-500">mmHg</span></p>
-                 </div>
-               </div>
-               <ArrowDown className="w-4 h-4 text-green-500" />
-             </div>
-             <div className="flex items-center gap-2 text-sm">
-               <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Optimal</Badge>
-               <span className="text-gray-500">Stable</span>
-             </div>
-           </Card>
+	useEffect(() => {
+		setEdit({ ...patient });
+	}, [patient]);
 
-          {/* Blood Sugar */} 
-          <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
-             <div className="flex items-center justify-between mb-4">
-               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                   <Droplet className="w-5 h-5 text-purple-500" />
-                 </div>
-                 <div>
-                   <p className="text-sm text-gray-500">Blood Sugar</p>
-                   <p className="text-2xl text-gray-900">90 <span className="text-sm text-gray-500">mg/dL</span></p>
-                 </div>
-               </div>
-               <ArrowUp className="w-4 h-4 text-orange-500" />
-             </div>
-             <div className="flex items-center gap-2 text-sm">
-               <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Normal</Badge>
-               <span className="text-gray-500">+5 from avg</span>
-             </div>
-           </Card>
+	const onFileChange = (file?: File) => {
+		if (!file) {
+			// typed updater - no implicit any
+			setEdit((s) => ({ ...s, photo: '' }));
+			return;
+		}
+		const reader = new FileReader();
+		reader.onload = () => {
+			try {
+				setEdit((s) => ({ ...s, photo: String(reader.result || '') }));
+			} catch { /* ignore */ }
+		};
+		reader.onerror = () => { /* ignore */ };
+		reader.readAsDataURL(file);
+	};
 
-          {/* BMI */} 
-          <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
-             <div className="flex items-center justify-between mb-4">
-               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                   <TrendingUp className="w-5 h-5 text-green-500" />
-                 </div>
-                 <div>
-                   <p className="text-sm text-gray-500">BMI</p>
-                   <p className="text-2xl text-gray-900">22.4 <span className="text-sm text-gray-500">kg/m²</span></p>
-                 </div>
-               </div>
-               <ArrowDown className="w-4 h-4 text-green-500" />
-             </div>
-             <div className="flex items-center gap-2 text-sm">
-               <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Healthy</Badge>
-               <span className="text-gray-500">-0.3 change</span>
-             </div>
-           </Card>
-         </div>
+	const savePatientFromDashboard = () => {
+		try {
+			localStorage.setItem('patientDetails', JSON.stringify(edit));
+			window.dispatchEvent(new CustomEvent('patientDetailsUpdated'));
+			setPatient({ ...edit });
+			setIsEditing(false);
+		} catch (err) {
+			console.error('savePatientFromDashboard', err);
+		}
+	};
 
-        {/* Charts and Reports */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-           {/* Heart Rate Trend Chart */}
-          <Card className="lg:col-span-2 p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
-             <div className="flex items-center justify-between mb-6">
-               <div>
-                 <h3 className="text-gray-900 mb-1">Heart Rate Trend</h3>
-                 <p className="text-sm text-gray-500">Last 24 hours</p>
-               </div>
-               <Button variant="outline" size="sm" className="w-full sm:w-auto">View Details</Button>
-             </div>
-             <div className="h-36 sm:h-48 md:h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={heartRateData}>
-                 <defs>
-                   <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
-                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                   </linearGradient>
-                 </defs>
-                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                 <XAxis dataKey="time" stroke="#9ca3af" />
-                 <YAxis stroke="#9ca3af" />
-                 <Tooltip />
-                 <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorHeartRate)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-           </Card>
-
-           {/* Blood Sugar Weekly Chart */}
-           <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
-            <div className="mb-4">
-              <h3 className="text-gray-900 mb-1">Blood Sugar</h3>
-              <p className="text-sm text-gray-500">Weekly average</p>
-            </div>
-            <div className="h-36 sm:h-48 md:h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={bloodSugarData}>
-                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                 <XAxis dataKey="day" stroke="#9ca3af" />
-                 <YAxis stroke="#9ca3af" />
-                 <Tooltip />
-                 <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-           </Card>
-         </div>
-
-         {/* Recent Reports */}
-        <Card className="mt-4 sm:mt-6 p-3 sm:p-4 bg-white border-0 shadow-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
-            <div>
-              <h3 className="text-gray-900 mb-1">Recent Health Reports</h3>
-              <p className="text-sm text-gray-500">View and manage your medical reports</p>
-            </div>
-            <Button className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto justify-center">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Report
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {recentReports.map((report) => (
-              <div key={report.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-w-0">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-gray-900 mb-1 break-words">{report.name}</h4>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span>{report.date}</span>
-                      <span>•</span>
-                      <span>{report.type}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start sm:items-center gap-2 mt-3 sm:mt-0">
-                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-                    {report.status}
-                  </Badge>
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto justify-center">
-                    <Eye className="w-4 h-4 mr-2" />
-                    View
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-       </div>
-     </div>
-   );
- }
+	return (
+		<div className="flex-1 w-full max-w-full min-w-0 bg-gray-50 overflow-auto">
+			<div className="p-3 sm:p-6 w-full">
+				{/* Header */}
+				<div className="mb-6">
+					<h1 className="text-xl sm:text-2xl md:text-3xl text-gray-900 mb-1">Welcome back, {patient.name}!</h1>
+					 <p className="text-gray-500">Here's your health overview for today</p>
+					 </div>
+	 
+					 {/* Top Cards - Patient Profile and AI Insights */}
+					 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+					   {/* Patient Profile Card */}
+					  <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0 w-full">
+						<div className="flex items-start gap-3 flex-wrap">
+						  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 overflow-hidden flex-shrink-0">
+							{patient.photo ? (
+							  <img src={patient.photo} alt="Patient" className="w-full h-full object-cover" />
+							) : (
+							  <img 
+								src="https://images.unsplash.com/photo-1758691461516-7e716e0ca135?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwYXRpZW50JTIwcG9ydHJhaXR8ZW58MXx8fHwxNzYxMDYwNDMwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+								alt="Patient"
+								className="w-full h-full object-cover"
+							  />
+							)}
+						  </div>
+						  <div className="flex-1 min-w-0">
+							<div className="flex items-center justify-between">
+							  <div>
+								<h3 className="text-gray-900 mb-1">{patient.name}</h3>
+								<p className="text-sm text-gray-500 mb-3">Patient ID: {patient.id}</p>
+							  </div>
+							  <div className="ml-4">
+								<Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+								  Edit Profile
+								</Button>
+							  </div>
+							</div>
+							<div className="grid grid-cols-2 gap-2 text-sm">
+							  <div>
+								<p className="text-gray-500">Age</p>
+								<p className="text-gray-900">{patient.age}</p>
+							  </div>
+							  <div>
+								<p className="text-gray-500">Gender</p>
+								<p className="text-gray-900">{patient.gender}</p>
+							  </div>
+							  <div>
+								<p className="text-gray-500">Blood Type</p>
+								<p className="text-gray-900">{patient.bloodType}</p>
+							  </div>
+							  <div>
+								<p className="text-gray-500">Height</p>
+								<p className="text-gray-900">{patient.height}</p>
+							  </div>
+							</div>
+						  </div>
+						</div>
+					  </Card>
+	 
+					   {/* AI Insights Card */}
+					  <Card className="lg:col-span-2 p-3 sm:p-4 bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-sm text-white min-w-0">
+						 <div className="flex items-start gap-3 flex-wrap">
+						  <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
+							<Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+						  </div>
+						  <div className="flex-1 min-w-0">
+							<div className="flex items-center gap-2 mb-2">
+							  <h3 className="text-sm sm:text-base">AI Diagnosis Summary</h3>
+							  <Badge className="bg-green-400 text-green-900 border-0">Low Risk</Badge>
+							</div>
+							<p className="text-blue-100 mb-4">
+							  Based on your recent health data and vital signs, your overall health status is good. 
+							  Your heart rate and blood pressure are within normal ranges.
+							</p>
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+							  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+								<div className="flex items-center gap-2 mb-1">
+								  <Shield className="w-4 h-4" />
+								  <p className="text-sm text-blue-100">Health Score</p>
+								</div>
+								<p className="text-xl sm:text-2xl">87/100</p>
+							  </div>
+							  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+								<div className="flex items-center gap-2 mb-1">
+								  <Activity className="w-4 h-4" />
+								  <p className="text-sm text-blue-100">Activity Level</p>
+								</div>
+								<p className="text-xl sm:text-2xl">Moderate</p>
+							  </div>
+							  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+								<div className="flex items-center gap-2 mb-1">
+								  <TrendingUp className="w-4 h-4" />
+								  <p className="text-sm text-blue-100">Trend</p>
+								</div>
+								<p className="text-xl sm:text-2xl">Improving</p>
+							  </div>
+							</div>
+						  </div>
+						</div>
+					  </Card>
+					 </div>
+	 
+				{/* Health Vitals */}
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+				  {/* Heart Rate */}
+				  <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
+					<div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+					   <div className="flex items-center gap-3">
+						 <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+						   <Heart className="w-5 h-5 text-red-500" />
+						 </div>
+						 <div>
+						   <p className="text-sm text-gray-500">Heart Rate</p>
+						   <p className="text-xl sm:text-2xl text-gray-900">72 <span className="text-sm text-gray-500">bpm</span></p>
+						 </div>
+					   </div>
+					   <ArrowDown className="w-4 h-4 text-green-500" />
+					</div>
+					<div className="flex items-center gap-2 text-sm">
+					   <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Normal</Badge>
+					   <span className="text-gray-500">-2 from avg</span>
+					</div>
+				  </Card>
+	
+				  {/* Blood Pressure */} 
+				  <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
+					 <div className="flex items-center justify-between mb-4">
+					   <div className="flex items-center gap-3">
+						 <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+						   <Activity className="w-5 h-5 text-blue-500" />
+						 </div>
+						 <div>
+						   <p className="text-sm text-gray-500">Blood Pressure</p>
+						   <p className="text-2xl text-gray-900">120/80 <span className="text-sm text-gray-500">mmHg</span></p>
+						 </div>
+					   </div>
+					   <ArrowDown className="w-4 h-4 text-green-500" />
+					 </div>
+					 <div className="flex items-center gap-2 text-sm">
+					   <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Optimal</Badge>
+					   <span className="text-gray-500">Stable</span>
+					 </div>
+				   </Card>
+	
+				  {/* Blood Sugar */} 
+				  <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
+					 <div className="flex items-center justify-between mb-4">
+					   <div className="flex items-center gap-3">
+						 <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
+						   <Droplet className="w-5 h-5 text-purple-500" />
+						 </div>
+						 <div>
+						   <p className="text-sm text-gray-500">Blood Sugar</p>
+						   <p className="text-2xl text-gray-900">90 <span className="text-sm text-gray-500">mg/dL</span></p>
+						 </div>
+					   </div>
+					   <ArrowUp className="w-4 h-4 text-orange-500" />
+					 </div>
+					 <div className="flex items-center gap-2 text-sm">
+					   <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Normal</Badge>
+					   <span className="text-gray-500">+5 from avg</span>
+					 </div>
+				   </Card>
+	
+				  {/* BMI */} 
+				  <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
+					 <div className="flex items-center justify-between mb-4">
+					   <div className="flex items-center gap-3">
+						 <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+						   <TrendingUp className="w-5 h-5 text-green-500" />
+						 </div>
+						 <div>
+						   <p className="text-sm text-gray-500">BMI</p>
+						   <p className="text-2xl text-gray-900">22.4 <span className="text-sm text-gray-500">kg/m²</span></p>
+						 </div>
+					   </div>
+					   <ArrowDown className="w-4 h-4 text-green-500" />
+					 </div>
+					 <div className="flex items-center gap-2 text-sm">
+					   <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Healthy</Badge>
+					   <span className="text-gray-500">-0.3 change</span>
+					 </div>
+				   </Card>
+				</div>
+	 
+				{/* Charts and Reports */}
+				<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+				   {/* Heart Rate Trend Chart */}
+				  <Card className="lg:col-span-2 p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
+					 <div className="flex items-center justify-between mb-6">
+					   <div>
+						 <h3 className="text-gray-900 mb-1">Heart Rate Trend</h3>
+						 <p className="text-sm text-gray-500">Last 24 hours</p>
+					   </div>
+					   <Button variant="outline" size="sm" className="w-full sm:w-auto">View Details</Button>
+					 </div>
+					 <div className="h-36 sm:h-48 md:h-56">
+					  <ResponsiveContainer width="100%" height="100%">
+						<AreaChart data={heartRateData}>
+						 <defs>
+						   <linearGradient id="colorHeartRate" x1="0" y1="0" x2="0" y2="1">
+							 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+							 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+						   </linearGradient>
+						 </defs>
+						 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+						 <XAxis dataKey="time" stroke="#9ca3af" />
+						 <YAxis stroke="#9ca3af" />
+						 <Tooltip />
+						 <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorHeartRate)" />
+						</AreaChart>
+					  </ResponsiveContainer>
+					</div>
+				   </Card>
+	
+				   {/* Blood Sugar Weekly Chart */}
+				   <Card className="p-3 sm:p-4 bg-white border-0 shadow-sm min-w-0">
+					<div className="mb-4">
+					  <h3 className="text-gray-900 mb-1">Blood Sugar</h3>
+					  <p className="text-sm text-gray-500">Weekly average</p>
+					</div>
+					<div className="h-36 sm:h-48 md:h-56">
+					  <ResponsiveContainer width="100%" height="100%">
+						<LineChart data={bloodSugarData}>
+						 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+						 <XAxis dataKey="day" stroke="#9ca3af" />
+						 <YAxis stroke="#9ca3af" />
+						 <Tooltip />
+						 <Line type="monotone" dataKey="value" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 4 }} />
+						</LineChart>
+					  </ResponsiveContainer>
+					</div>
+				   </Card>
+				</div>
+	 
+				{/* Recent Reports */}
+				<Card className="mt-4 sm:mt-6 p-3 sm:p-4 bg-white border-0 shadow-sm">
+				  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+					<div>
+					  <h3 className="text-gray-900 mb-1">Recent Health Reports</h3>
+					  <p className="text-sm text-gray-500">View and manage your medical reports</p>
+					</div>
+					<Button className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto justify-center">
+					  <Upload className="w-4 h-4 mr-2" />
+					  Upload Report
+					</Button>
+				  </div>
+	 
+				  <div className="space-y-3">
+					{recentReports.map((report) => (
+					  <div key={report.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors min-w-0">
+						<div className="flex items-start gap-3 min-w-0">
+						  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+							<Calendar className="w-5 h-5 text-blue-600" />
+						  </div>
+						  <div className="min-w-0">
+							<h4 className="text-gray-900 mb-1 break-words">{report.name}</h4>
+							<div className="flex items-center gap-2 text-sm text-gray-500">
+							  <span>{report.date}</span>
+							  <span>•</span>
+							  <span>{report.type}</span>
+							</div>
+						  </div>
+						</div>
+						<div className="flex items-start sm:items-center gap-2 mt-3 sm:mt-0">
+						  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+							{report.status}
+						  </Badge>
+						  <Button variant="outline" size="sm" className="w-full sm:w-auto justify-center">
+							<Eye className="w-4 h-4 mr-2" />
+							View
+						  </Button>
+						</div>
+					  </div>
+					))}
+				  </div>
+				</Card>
+	
+				{/* Edit Profile Modal (safe, simple) */}
+				{isEditing && (
+				  <div className="fixed inset-0 z-50 flex items-center justify-center">
+					<div className="absolute inset-0 bg-black/40" onClick={() => setIsEditing(false)} />
+					<div className="relative bg-white rounded-lg w-full max-w-xl p-6 z-10 shadow-lg">
+					  <h3 className="text-lg font-medium mb-4">Edit Profile</h3>
+					  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+						<div>
+						  <Label htmlFor="editName">Full Name</Label>
+						  <Input id="editName" value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} className="mt-1" />
+						</div>
+						<div>
+						  <Label htmlFor="editId">Patient ID</Label>
+						  <Input id="editId" value={edit.id} onChange={(e) => setEdit({ ...edit, id: e.target.value })} className="mt-1" />
+						</div>
+						<div>
+						  <Label htmlFor="editAge">Age</Label>
+						  <Input id="editAge" value={edit.age} onChange={(e) => setEdit({ ...edit, age: e.target.value })} className="mt-1" />
+						</div>
+						<div>
+						  <Label htmlFor="editGender">Gender</Label>
+						  <Input id="editGender" value={edit.gender} onChange={(e) => setEdit({ ...edit, gender: e.target.value })} className="mt-1" />
+						</div>
+						<div>
+						  <Label htmlFor="editBlood">Blood Type</Label>
+						  <Input id="editBlood" value={edit.bloodType} onChange={(e) => setEdit({ ...edit, bloodType: e.target.value })} className="mt-1" />
+						</div>
+						<div>
+						  <Label htmlFor="editHeight">Height</Label>
+						  <Input id="editHeight" value={edit.height} onChange={(e) => setEdit({ ...edit, height: e.target.value })} className="mt-1" />
+						</div>
+						<div className="md:col-span-2">
+						  <Label htmlFor="photo">Profile Photo</Label>
+						  <input
+							id="photo"
+							type="file"
+							accept="image/*"
+							onChange={(e) => onFileChange(e.target.files?.[0])}
+							className="mt-2"
+						  />
+						  {edit.photo && <img src={edit.photo} alt="preview" className="mt-3 w-24 h-24 rounded-full object-cover" />}
+						</div>
+					  </div>
+					  <div className="mt-4 flex justify-end gap-2">
+						<Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+						<Button onClick={savePatientFromDashboard} className="bg-blue-500 hover:bg-blue-600">Save</Button>
+					  </div>
+					</div>
+				  </div>
+				)}
+			   </div>
+			 </div>
+		   );
+	 }

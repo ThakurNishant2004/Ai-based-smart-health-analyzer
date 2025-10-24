@@ -15,8 +15,64 @@ import {
   LogOut,
   Save
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export function Settings() {
+	// Patient type & local state persisted to localStorage
+	type Patient = {
+		name: string;
+		id: string;
+		age: string;
+		gender: string;
+		bloodType: string;
+		height: string;
+	};
+	
+	const defaultPatient: Patient = {
+		name: 'Sarah Johnson',
+		id: 'MDS-2024-1847',
+		age: '32 years',
+		gender: 'Female',
+		bloodType: 'A+',
+		height: '165 cm'
+	};
+
+	const [patient, setPatient] = useState<Patient>(() => {
+		try {
+			const raw = localStorage.getItem('patientDetails');
+			return raw ? JSON.parse(raw) : defaultPatient;
+		} catch {
+			return defaultPatient;
+		}
+	});
+
+	useEffect(() => {
+		// stay in sync with changes from other tabs/windows
+		const onStorage = (e: StorageEvent) => {
+			if (e.key === 'patientDetails') {
+				try {
+					setPatient(e.newValue ? JSON.parse(e.newValue) : defaultPatient);
+				} catch {
+					setPatient(defaultPatient);
+				}
+			}
+		};
+		window.addEventListener('storage', onStorage);
+		return () => window.removeEventListener('storage', onStorage);
+	}, []);
+
+	const savePatient = () => {
+		try {
+			localStorage.setItem('patientDetails', JSON.stringify(patient));
+			// notify in-window listeners
+			window.dispatchEvent(new CustomEvent('patientDetailsUpdated'));
+			// small UX signal
+			alert('Patient details saved');
+		} catch (err) {
+			console.error('savePatient error', err);
+		}
+	};
+
   return (
     <div className="flex-1 w-full max-w-full min-w-0 bg-gray-50 overflow-auto">
       <div className="p-3 sm:p-6 w-full">
@@ -42,24 +98,34 @@ export function Settings() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="Sarah" className="mt-1" />
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input id="name" value={patient.name} onChange={(e) => setPatient({ ...patient, name: e.target.value })} className="mt-1" />
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Johnson" className="mt-1" />
+                  <Label htmlFor="id">Patient ID</Label>
+                  <Input id="id" value={patient.id} onChange={(e) => setPatient({ ...patient, id: e.target.value })} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="age">Age</Label>
+                  <Input id="age" value={patient.age} onChange={(e) => setPatient({ ...patient, age: e.target.value })} className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="gender">Gender</Label>
+                  <Input id="gender" value={patient.gender} onChange={(e) => setPatient({ ...patient, gender: e.target.value })} className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="bloodType">Blood Type</Label>
+                  <Input id="bloodType" value={patient.bloodType} onChange={(e) => setPatient({ ...patient, bloodType: e.target.value })} className="mt-1" />
                 </div>
               </div>
               <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" defaultValue="sarah.johnson@example.com" className="mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" className="mt-1" />
+                <Label htmlFor="height">Height</Label>
+                <Input id="height" value={patient.height} onChange={(e) => setPatient({ ...patient, height: e.target.value })} className="mt-1" />
               </div>
               <div className="flex">
-                <Button className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto justify-center">
+                <Button onClick={savePatient} className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto justify-center">
                   <Save className="w-4 h-4 mr-2" />
                   Save Changes
                 </Button>
