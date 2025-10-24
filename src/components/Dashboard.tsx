@@ -59,7 +59,7 @@ export function Dashboard() {
           {/* Patient Profile Card */}
           <Card className="p-6 bg-white border-0 shadow-sm">
             <div className="flex items-start gap-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 overflow-hidden">
+              <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-100 to-blue-200 overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1758691461516-7e716e0ca135?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwYXRpZW50JTIwcG9ydHJhaXR8ZW58MXx8fHwxNzYxMDYwNDMwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                   alt="Patient"
@@ -92,7 +92,7 @@ export function Dashboard() {
           </Card>
 
           {/* AI Insights Card */}
-          <Card className="lg:col-span-2 p-6 bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-sm text-white">
+          <Card className="lg:col-span-2 p-6 bg-linear-to-br from-blue-500 to-blue-600 border-0 shadow-sm text-white">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                 <Brain className="w-6 h-6" />
