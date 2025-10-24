@@ -93,10 +93,10 @@ export function DoctorChat() {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 overflow-hidden flex flex-col">
+    <div className="flex-1 w-full max-w-full min-w-0 bg-gray-50 overflow-hidden flex flex-col">
       {/* Chat Header */}
       <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
+        <div className="flex items-center justify-between w-full px-2 sm:px-4">
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden">
@@ -133,8 +133,8 @@ export function DoctorChat() {
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-auto p-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto space-y-4">
+      <div className="flex-1 overflow-auto p-3 sm:p-4">
+        <div className="w-full space-y-4">
           {/* Date Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-gray-200"></div>
@@ -145,7 +145,7 @@ export function DoctorChat() {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} px-1`}
             >
               {msg.sender === 'doctor' && (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
@@ -153,15 +153,11 @@ export function DoctorChat() {
                 </div>
               )}
               
-              <div className={`max-w-[70%] ${msg.sender === 'user' ? 'order-1' : ''}`}>
+              <div className={`max-w-[85%] sm:max-w-[70%] ${msg.sender === 'user' ? 'order-1' : ''} min-w-0`}>
                 <div
-                  className={`rounded-2xl px-4 py-3 ${
-                    msg.sender === 'user'
-                      ? 'bg-blue-500 text-white rounded-br-sm'
-                      : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'
-                  }`}
+                  className={`rounded-2xl px-3 py-2 ${msg.sender === 'user' ? 'bg-blue-500 text-white rounded-br-sm' : 'bg-white text-gray-900 border border-gray-200 rounded-bl-sm'}`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.message}</p>
+                  <p className="whitespace-pre-wrap break-words text-sm">{msg.message}</p>
                 </div>
                 <div className={`flex items-center gap-1 mt-1 px-1 ${msg.sender === 'user' ? 'justify-end' : ''}`}>
                   <span className="text-xs text-gray-500">{msg.timestamp}</span>
@@ -180,7 +176,7 @@ export function DoctorChat() {
           ))}
 
           {/* AI Suggestions */}
-          <Card className="bg-blue-50 border-blue-200 p-4">
+          <Card className="bg-blue-50 border-blue-200 p-3">
             <div className="flex items-start gap-3">
               <Bot className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div>
@@ -219,8 +215,8 @@ export function DoctorChat() {
 
       {/* Message Input */}
       <div className="bg-white border-t border-gray-200 p-4">
-        <div className="max-w-6xl mx-auto">
-          <form onSubmit={handleSendMessage} className="flex items-end gap-3">
+        <div className="w-full px-2 sm:px-4">
+          <form onSubmit={handleSendMessage} className="flex flex-col sm:flex-row items-end gap-3">
             <Button
               type="button"
               variant="outline"
@@ -230,7 +226,7 @@ export function DoctorChat() {
               <Paperclip className="w-5 h-5 text-gray-500" />
             </Button>
             
-            <div className="flex-1 relative">
+            <div className="flex-1 relative w-full">
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -250,17 +246,17 @@ export function DoctorChat() {
             <Button
               type="submit"
               disabled={!message.trim()}
-              className="bg-blue-500 hover:bg-blue-600 flex-shrink-0"
+              className="bg-blue-500 hover:bg-blue-600 flex-shrink-0 w-full sm:w-auto"
               size="icon"
             >
               <Send className="w-5 h-5" />
             </Button>
-          </form>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            This AI assistant provides general health information. For emergencies, please call your local emergency services.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+           </form>
+           <p className="text-xs text-gray-500 mt-2 text-center">
+             This AI assistant provides general health information. For emergencies, please call your local emergency services.
+           </p>
+         </div>
+       </div>
+     </div>
+   );
+ }

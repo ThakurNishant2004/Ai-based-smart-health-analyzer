@@ -24,7 +24,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Image */}
+      {/* Left side - Image (visible on lg and up, hidden on small screens) */}
       <div 
         className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
         style={{
